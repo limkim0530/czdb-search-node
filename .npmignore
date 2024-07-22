@@ -1,0 +1,11 @@
+node_modules/
+example/
+src/
+test/
+
+.gitignore
+.gitattributes
+
+pnpm-lock.yaml
+rollup.config.mjs
+tsconfig.json
