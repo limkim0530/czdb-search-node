@@ -4,14 +4,18 @@ import dts from 'rollup-plugin-dts';
 export default [
     {
         input: 'src/index.ts',
-        output: {
-            dir: 'lib',
+        output: [{
+            dir: 'dist',
             format: 'cjs',
+            sourcemap: false,
+            exports: 'named',
+        }, {
+            dir: 'dist/es',
+            format: 'es',
             sourcemap: false
-        },
+        }],
         plugins: [
             typescript({
-                outDir: 'lib',
                 compilerOptions: {
                     declaration: false,
                     removeComments: true,
@@ -23,7 +27,7 @@ export default [
     {
         input: 'src/index.ts',
         output: {
-            file: 'lib/index.d.ts'
+            file: 'dist/index.d.ts'
         },
         plugins: [dts()]
     }
