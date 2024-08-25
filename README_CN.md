@@ -28,7 +28,10 @@ npm install czdb
 
 ```typescript
 // 引入DbSearcher
-import DbSearcher, { QueryType } from "../lib/index";
+import DbSearcher, { QueryType } from "czdb";
+
+// CommonJS 使用 require 引入:
+// const { default: DbSearcher, QueryType } = require('czdb');
 
 // 准备好你的.czdb文件与密钥
 const IPV4_DB_PATH = "YOUR_IPV4_DB_PATH";
