@@ -30,7 +30,10 @@ npm install czdb
 
 ```typescript
 // Import DbSearcher
-import DbSearcher, { QueryType } from "../lib/index";
+import DbSearcher, { QueryType } from "czdb";
+
+// CommonJS require:
+// const { default: DbSearcher, QueryType } = require('czdb');
 
 // Prepare your .czdb file and key
 const IPV4_DB_PATH = "YOUR_IPV4_DB_PATH";
