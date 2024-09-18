@@ -21,9 +21,9 @@
   "author": "LIMKIM",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/limkim530/czdb-search-node"
+    "url": "git+https://github.com/limkim0530/czdb-search-node"
   },
-  "homepage": "https://github.com/limkim530/czdb-search-node#readme",
+  "homepage": "https://github.com/limkim0530/czdb-search-node#readme",
   "license": "MIT",
   "dependencies": {
     "@msgpack/msgpack": "3.0.0-beta2"
