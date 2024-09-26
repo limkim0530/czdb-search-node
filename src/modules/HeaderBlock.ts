@@ -1,4 +1,4 @@
-import ByteUtil from '../utils/ByteUtils';
+import ByteUtil from '../utils/ByteUtils.js';
 
 export default class HeaderBlock {
     public static readonly HEADER_LINE_SIZE = 20;

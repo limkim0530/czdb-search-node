@@ -1,5 +1,5 @@
-import ByteUtil from '../utils/ByteUtils';
-import DecryptedBlock from './DecryptedBlock';
+import DecryptedBlock from './DecryptedBlock.js';
+import ByteUtil from '../utils/ByteUtils.js';
 
 export default class HyperHeaderBlock {
     public static readonly HEADER_SIZE = 12;

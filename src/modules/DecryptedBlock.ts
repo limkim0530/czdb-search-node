@@ -1,5 +1,5 @@
-import ByteUtil from '../utils/ByteUtils';
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import ByteUtil from '../utils/ByteUtils.js';
 
 export default class DecryptedBlock {
     private clientId: number;
@@ -106,7 +106,7 @@ export default class DecryptedBlock {
         const decipher = createDecipheriv('aes-128-ecb', keyBytes, null);
         decipher.setAutoPadding(true);
 
-        let decrypted = Buffer.concat([
+        const decrypted = Buffer.concat([
             decipher.update(Buffer.from(encryptedBytes)),
             decipher.final()
         ]);

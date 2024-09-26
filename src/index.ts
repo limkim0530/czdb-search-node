@@ -1,13 +1,13 @@
 import net from 'net';
-import Cz88RandomAccessFile from "./modules/Cz88RandomAccessFile";
-import HyperHeaderDecoder from "./utils/HyperHeaderDecoder";
-import DbType from "./typings/DbType";
-import QueryType from "./typings/QueryType";
-import { END_INDEX_PTR, FILE_SIZE_PTR, FIRST_INDEX_PTR, HEADER_BLOCK_PTR, SUPER_PART_LENGTH } from "./constant";
-import ByteUtil from "./utils/ByteUtils";
-import IndexBlock from "./modules/IndexBlock";
-import Decryptor from "./utils/Decryptor";
-import { DataBlock } from "./modules/DataBlock";
+import Cz88RandomAccessFile from "./modules/Cz88RandomAccessFile.js";
+import HyperHeaderDecoder from "./utils/HyperHeaderDecoder.js";
+import DbType from "./typings/DbType.js";
+import QueryType from "./typings/QueryType.js";
+import { END_INDEX_PTR, FILE_SIZE_PTR, FIRST_INDEX_PTR, HEADER_BLOCK_PTR, SUPER_PART_LENGTH } from "./constant/index.js";
+import ByteUtil from "./utils/ByteUtils.js";
+import IndexBlock from "./modules/IndexBlock.js";
+import Decryptor from "./utils/Decryptor.js";
+import { DataBlock } from "./modules/DataBlock.js";
 
 export default class DbSearcher {
     // Enum representing the type of the database (IPv4 or IPv6)

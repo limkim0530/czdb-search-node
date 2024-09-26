@@ -5,12 +5,12 @@ export default [
     {
         input: 'src/index.ts',
         output: [{
-            dir: 'dist',
+            file: 'dist/index.cjs',
             format: 'cjs',
             sourcemap: false,
             exports: 'named',
         }, {
-            dir: 'dist/es',
+            file: 'dist/es/index.mjs',
             format: 'es',
             sourcemap: false
         }],
@@ -18,8 +18,7 @@ export default [
             typescript({
                 compilerOptions: {
                     declaration: false,
-                    removeComments: true,
-                    module: 'es6'
+                    removeComments: true
                 }
             })
         ]

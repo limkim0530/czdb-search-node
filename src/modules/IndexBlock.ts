@@ -1,5 +1,5 @@
-import DbType from '../typings/DbType';
-import ByteUtil from '../utils/ByteUtils';
+import DbType from '../typings/DbType.js';
+import ByteUtil from '../utils/ByteUtils.js';
 
 export default class IndexBlock {
     private startIp: Buffer;
