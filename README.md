@@ -23,8 +23,22 @@ Database files and keys can be obtained from [www.cz88.net](https://cz88.net/geo
 
 ### Please use **Node.js v8.0.0** or higher to get ES6 support.
 
+#### npm
+
 ```bash
 npm install czdb
+```
+
+#### yarn
+
+```bash
+yarn add czdb
+```
+
+#### pnpm
+
+```bash
+pnpm add czdb
 ```
 
 ## Usage

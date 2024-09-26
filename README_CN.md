@@ -21,8 +21,22 @@ czdb-search 支持 IPv4 和 IPv6 地址的查询。在创建 DbSearcher 实例�
 
 ### 请使用  **Node.js v8.0.0**  或者更高版本以取得 ES6 支持.
 
+#### npm
+
 ```bash
 npm install czdb
+```
+
+#### yarn
+
+```bash
+yarn add czdb
+```
+
+#### pnpm
+
+```bash
+pnpm add czdb
 ```
 
 ## 使用
