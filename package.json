@@ -1,6 +1,6 @@
 {
   "name": "czdb",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A javascript library for searching IP address-related data in a CZDB database",
   "main": "dist/index.cjs",
   "type": "module",
