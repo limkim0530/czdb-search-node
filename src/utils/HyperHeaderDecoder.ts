@@ -1,6 +1,6 @@
-import HyperHeaderBlock from '../modules/HyperHeaderBlock';
-import DecryptedBlock from '../modules/DecryptedBlock';
-import ByteUtil from './ByteUtils';
+import HyperHeaderBlock from '../modules/HyperHeaderBlock.js';
+import DecryptedBlock from '../modules/DecryptedBlock.js';
+import ByteUtil from './ByteUtils.js';
 import { closeSync, openSync, readSync } from 'fs';
 import { resolve } from 'path';
 

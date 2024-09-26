@@ -1,13 +1,13 @@
 import net from 'net';
-import Cz88RandomAccessFile from "./modules/Cz88RandomAccessFile";
-import HyperHeaderDecoder from "./utils/HyperHeaderDecoder";
-import DbType from "./typings/DbType";
-import QueryType from "./typings/QueryType";
-import { END_INDEX_PTR, FILE_SIZE_PTR, FIRST_INDEX_PTR, HEADER_BLOCK_PTR, SUPER_PART_LENGTH } from "./constant";
-import ByteUtil from "./utils/ByteUtils";
-import IndexBlock from "./modules/IndexBlock";
-import Decryptor from "./utils/Decryptor";
-import { DataBlock } from "./modules/DataBlock";
+import Cz88RandomAccessFile from "./modules/Cz88RandomAccessFile.js";
+import HyperHeaderDecoder from "./utils/HyperHeaderDecoder.js";
+import DbType from "./typings/DbType.js";
+import QueryType from "./typings/QueryType.js";
+import { END_INDEX_PTR, FILE_SIZE_PTR, FIRST_INDEX_PTR, HEADER_BLOCK_PTR, SUPER_PART_LENGTH } from "./constant/index.js";
+import ByteUtil from "./utils/ByteUtils.js";
+import IndexBlock from "./modules/IndexBlock.js";
+import Decryptor from "./utils/Decryptor.js";
+import { DataBlock } from "./modules/DataBlock.js";
 
 export default class DbSearcher {
     // Enum representing the type of the database (IPv4 or IPv6)
@@ -312,7 +312,7 @@ export default class DbSearcher {
         }
 
         // less than header range
-        if (l == 0) {
+        if (l == 0 && h <= 0) {
             return [0, 0];
         }
 
@@ -456,23 +456,24 @@ export default class DbSearcher {
     }
 
     getIpBytes(ip: string): Buffer {
-        // 检查 IP 地址是否有效
+        // check if the IP address is valid
         if (!net.isIP(ip)) {
             throw new Error('Invalid IP address');
         }
 
-        // 判断是 IPv4 还是 IPv6
+        // determine whether it is IPv4 or IPv6
         const isIPv4 = net.isIPv4(ip);
 
         if (isIPv4) {
-            // 处理 IPv4
+            // handling IPv4
             return Buffer.from(ip.split('.').map(octet => parseInt(octet)));
         } else {
-            // 处理 IPv6
+            // handling IPv6
             return Buffer.from(ip.split(':').reduce((acc, part) => {
                 if (part === '') {
-                    // 处理双冒号的情况
-                    acc.push(...new Array(8 - ip.split(':').filter(Boolean).length).fill('0000'));
+                    // handling double colon case
+                    const array = new Array(8 - ip.split(':').filter(Boolean).length).fill('0000') as string[];
+                    acc.push(...array);
                 } else {
                     acc.push(part.padStart(4, '0'));
                 }

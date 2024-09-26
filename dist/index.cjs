@@ -1,16 +1,17 @@
-import net from 'net';
-import { openSync, readSync, writeSync, fstatSync, closeSync } from 'fs';
-import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
-import { resolve } from 'path';
-import { decodeMulti } from '@msgpack/msgpack';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var net = require('net');
+var fs = require('fs');
+var crypto = require('crypto');
+var path = require('path');
+var msgpack = require('@msgpack/msgpack');
 
 class Cz88RandomAccessFile {
-    fd;
-    offset;
-    currentPosition = 0;
-    alive;
     constructor(filename, mode, offset) {
-        this.fd = openSync(filename, mode);
+        this.currentPosition = 0;
+        this.fd = fs.openSync(filename, mode);
         this.alive = true;
         this.offset = offset;
     }
@@ -18,12 +19,12 @@ class Cz88RandomAccessFile {
         this.currentPosition = position + this.offset;
     }
     read(buffer, length) {
-        return readSync(this.fd, buffer, 0, length, this.currentPosition);
+        return fs.readSync(this.fd, buffer, 0, length, this.currentPosition);
     }
     readFully(buffer, off = 0, len = buffer.length) {
         let bytesRead = 0;
         while (bytesRead < len) {
-            const n = readSync(this.fd, buffer, off + bytesRead, len - bytesRead, this.currentPosition + bytesRead);
+            const n = fs.readSync(this.fd, buffer, off + bytesRead, len - bytesRead, this.currentPosition + bytesRead);
             if (n === 0) {
                 throw new Error('EOF reached before reading fully');
             }
@@ -32,15 +33,15 @@ class Cz88RandomAccessFile {
         this.currentPosition += bytesRead;
     }
     write(buffer, length) {
-        return writeSync(this.fd, buffer, 0, length, this.currentPosition);
+        return fs.writeSync(this.fd, buffer, 0, length, this.currentPosition);
     }
     length() {
-        const stats = fstatSync(this.fd);
+        const stats = fs.fstatSync(this.fd);
         return stats.size - this.offset;
     }
     close() {
         if (this.alive) {
-            closeSync(this.fd);
+            fs.closeSync(this.fd);
             this.alive = false;
         }
     }
@@ -79,9 +80,6 @@ class ByteUtil {
 }
 
 class DecryptedBlock {
-    clientId;
-    expirationDate;
-    randomSize;
     constructor() {
         this.clientId = 0;
         this.expirationDate = 0;
@@ -113,8 +111,8 @@ class DecryptedBlock {
     }
     encrypt(data, key) {
         const keyBytes = Buffer.from(key, 'base64');
-        const iv = randomBytes(16);
-        const cipher = createCipheriv('aes-256-cbc', keyBytes, iv);
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv('aes-256-cbc', keyBytes, iv);
         const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
         return Buffer.concat([iv, encrypted]);
     }
@@ -123,9 +121,9 @@ class DecryptedBlock {
     }
     static decrypt(key, encryptedBytes) {
         const keyBytes = Buffer.from(key, 'base64');
-        const decipher = createDecipheriv('aes-128-ecb', keyBytes, null);
+        const decipher = crypto.createDecipheriv('aes-128-ecb', keyBytes, null);
         decipher.setAutoPadding(true);
-        let decrypted = Buffer.concat([
+        const decrypted = Buffer.concat([
             decipher.update(Buffer.from(encryptedBytes)),
             decipher.final()
         ]);
@@ -141,12 +139,6 @@ class DecryptedBlock {
 }
 
 class HyperHeaderBlock {
-    static HEADER_SIZE = 12;
-    version;
-    clientId;
-    encryptedBlockSize;
-    encryptedData;
-    decryptedBlock;
     constructor() {
         this.version = 0;
         this.clientId = 0;
@@ -205,18 +197,19 @@ class HyperHeaderBlock {
         return 12 + this.encryptedBlockSize + this.decryptedBlock.getRandomSize();
     }
 }
+HyperHeaderBlock.HEADER_SIZE = 12;
 
 class HyperHeaderDecoder {
     static decrypt(dbFile, key) {
-        const fd = typeof dbFile === 'string' ? openSync(resolve(dbFile), 'r') : dbFile;
+        const fd = typeof dbFile === 'string' ? fs.openSync(path.resolve(dbFile), 'r') : dbFile;
         const headerBytes = Buffer.alloc(HyperHeaderBlock.HEADER_SIZE);
-        readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
+        fs.readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
         const version = ByteUtil.getIntLong(headerBytes, 0);
         const clientId = ByteUtil.getIntLong(headerBytes, 4);
         const encryptedBlockSize = ByteUtil.getIntLong(headerBytes, 8);
         const encryptedBytes = Buffer.alloc(encryptedBlockSize);
-        readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
-        closeSync(fd);
+        fs.readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
+        fs.closeSync(fd);
         const decryptedBlock = DecryptedBlock.decrypt(key, encryptedBytes);
         if (decryptedBlock.getClientId() !== clientId) {
             throw new Error("Wrong clientId");
@@ -255,11 +248,6 @@ const END_INDEX_PTR = 13;
 const SUPER_PART_LENGTH = 17;
 
 class IndexBlock {
-    startIp;
-    endIp;
-    dataPtr;
-    dataLen;
-    dbType;
     constructor(startIp, endIp, dataPtr, dataLen, dbType) {
         this.startIp = startIp;
         this.endIp = endIp;
@@ -310,7 +298,6 @@ class IndexBlock {
 }
 
 class Decryptor {
-    keyBytes;
     constructor(key) {
         this.keyBytes = Buffer.from(key, 'base64');
     }
@@ -324,8 +311,6 @@ class Decryptor {
 }
 
 class DataBlock {
-    region;
-    dataPtr;
     constructor(region, dataPtr) {
         this.region = region;
         this.dataPtr = dataPtr;
@@ -334,7 +319,7 @@ class DataBlock {
         try {
             return this.unpack(geoMapData, columnSelection);
         }
-        catch (e) {
+        catch (_a) {
             return null;
         }
     }
@@ -350,7 +335,7 @@ class DataBlock {
         return this;
     }
     unpack(geoMapData, columnSelection) {
-        const regionUnpacker = decodeMulti(this.region);
+        const regionUnpacker = msgpack.decodeMulti(this.region);
         const geoPosMixSize = regionUnpacker.next().value;
         const otherData = regionUnpacker.next().value;
         if (geoPosMixSize === 0) {
@@ -364,39 +349,37 @@ class DataBlock {
         const regionData = Buffer.alloc(dataLen);
         regionData.set(geoMapData.subarray(dataPtr, dataPtr + dataLen), 0);
         let str = '';
-        const geoColumnUnpacker = decodeMulti(regionData);
-        let quitLoop = false;
-        let count = 0;
-        do {
-            let { value, done } = geoColumnUnpacker.next();
-            quitLoop = done || false;
-            count++;
-            const columnSelected = (columnSelection >> (count + 1) & 1) === 1;
-            value = value === "" ? "null" : value;
+        const geoColumnUnpackedData = msgpack.decode(regionData);
+        const columnNumber = geoColumnUnpackedData.length;
+        for (let i = 0; i < columnNumber; i++) {
+            const columnSelected = (columnSelection >> (i + 1) & 1) === 1;
+            let value = geoColumnUnpackedData[i];
+            if (!value || !value.trim()) {
+                value = "null";
+            }
             if (columnSelected) {
                 str += value;
                 str += "\t";
             }
-        } while (!quitLoop);
+        }
         return str + otherData;
     }
 }
 
 class DbSearcher {
-    dbType = DbType$1.IPV4;
-    ipBytesLength = 0;
-    queryType;
-    totalHeaderBlockSize = 0;
-    raf = null;
-    HeaderSip = [];
-    HeaderPtr = [];
-    headerLength = 0;
-    firstIndexPtr = 0;
-    totalIndexBlocks = 0;
-    dbBinStr = null;
-    columnSelection = 0;
-    geoMapData = null;
     constructor(dbFile, queryType, key) {
+        this.dbType = DbType$1.IPV4;
+        this.ipBytesLength = 0;
+        this.totalHeaderBlockSize = 0;
+        this.raf = null;
+        this.HeaderSip = [];
+        this.HeaderPtr = [];
+        this.headerLength = 0;
+        this.firstIndexPtr = 0;
+        this.totalIndexBlocks = 0;
+        this.dbBinStr = null;
+        this.columnSelection = 0;
+        this.geoMapData = null;
         this.queryType = queryType;
         const headerBlock = HyperHeaderDecoder.decrypt(dbFile, key);
         this.raf = new Cz88RandomAccessFile(dbFile, "r", headerBlock.getHeaderSize());
@@ -557,7 +540,7 @@ class DbSearcher {
                 break;
             }
         }
-        if (l == 0) {
+        if (l == 0 && h <= 0) {
             return [0, 0];
         }
         if (l > h) {
@@ -644,7 +627,8 @@ class DbSearcher {
         else {
             return Buffer.from(ip.split(':').reduce((acc, part) => {
                 if (part === '') {
-                    acc.push(...new Array(8 - ip.split(':').filter(Boolean).length).fill('0000'));
+                    const array = new Array(8 - ip.split(':').filter(Boolean).length).fill('0000');
+                    acc.push(...array);
                 }
                 else {
                     acc.push(part.padStart(4, '0'));
@@ -689,4 +673,11 @@ class DbSearcher {
     }
 }
 
-export { Cz88RandomAccessFile, DataBlock, DbType$1 as DbType, Decryptor, HyperHeaderDecoder, IndexBlock, QueryType$1 as QueryType, DbSearcher as default };
+exports.Cz88RandomAccessFile = Cz88RandomAccessFile;
+exports.DataBlock = DataBlock;
+exports.DbType = DbType$1;
+exports.Decryptor = Decryptor;
+exports.HyperHeaderDecoder = HyperHeaderDecoder;
+exports.IndexBlock = IndexBlock;
+exports.QueryType = QueryType$1;
+exports.default = DbSearcher;
