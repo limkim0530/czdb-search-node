@@ -1,4 +1,4 @@
-import { decode, decodeMulti, Decoder } from '@msgpack/msgpack';
+import { decodeMulti, decode } from '@msgpack/msgpack';
 
 export class DataBlock {
     private region: Buffer;
@@ -17,7 +17,7 @@ export class DataBlock {
     getRegion(geoMapData: Buffer | null, columnSelection: number): string | null {
         try {
             return this.unpack(geoMapData, columnSelection);
-        } catch (e) {
+        } catch {
             return null;
         }
     }
@@ -69,28 +69,29 @@ export class DataBlock {
         if (!geoMapData) {
             return null;
         }
+
         // read the region data from the geoMapData
         const regionData = Buffer.alloc(dataLen);
         regionData.set(geoMapData.subarray(dataPtr, dataPtr + dataLen), 0);
         let str = '';
 
-        const geoColumnUnpacker = decodeMulti(regionData);
-        let quitLoop = false;
-        let count = 0;
-        do {
-            let { value, done } = geoColumnUnpacker.next();
-            quitLoop = done || false;
-            count++;
+        const geoColumnUnpackedData = decode(regionData) as string[];
+        const columnNumber = geoColumnUnpackedData.length;
 
-            const columnSelected = (columnSelection >> (count + 1) & 1) === 1;
-            value = value === "" ? "null" : value;
+        for (let i = 0; i < columnNumber; i++) {
+            const columnSelected = (columnSelection >> (i + 1) & 1) === 1;
+            let value = geoColumnUnpackedData[i];
+
+            if (!value || !value.trim()) {
+                value = "null";
+            }
 
             if (columnSelected) {
                 str += value as string;
                 str += "\t";
             }
-        } while (!quitLoop);
-  
+        }
+
         return str + otherData;
     }
 }
