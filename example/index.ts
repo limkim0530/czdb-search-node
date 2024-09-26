@@ -1,16 +1,13 @@
-import DbSearcher, { QueryType } from "../dist";
-
-// CommonJS require:
-// const { default: DbSearcher, QueryType } = require('../dist');
+import DbSearcher, { QueryType } from "../src";
 
 const IPV6_DB_PATH = "YOUR_IPV6_DB_PATH";
 const IPV4_DB_PATH = "YOUR_IPV4_DB_PATH";
 const IPV6_IP = "240e:391:ed3:8a10::1";
-const IPV4_IP = "1.64.219.93";
 const KEY = "YOUR_KEY_HERE";
+const IPV4_IP = "14.9.15.0";
 
-const searcher = new DbSearcher(IPV4_DB_PATH, QueryType.BTREE, KEY)
-const ipv6Searcher = new DbSearcher(IPV6_DB_PATH, QueryType.BTREE, KEY)
+const searcher = new DbSearcher(IPV4_DB_PATH, QueryType.MEMORY, KEY);
+const ipv6Searcher = new DbSearcher(IPV6_DB_PATH, QueryType.MEMORY, KEY);
 
 console.time('ipv4_perform');
 const region = searcher.search(IPV4_IP);

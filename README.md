@@ -2,7 +2,8 @@
 
 ### [中文文档](./README_CN.md)
 
-<img src="https://img.shields.io/npm/v/czdb" alt="czdb"/>
+[![npm version][npm-version-src]][npm-version-href]
+[![npm downloads][npm-downloads-src]][npm-downloads-href]
 
 ### A Node.js package for querying the new format data of the Pure IP offline community version database `czdb`. It supports two types of search algorithms: in-memory search (MEMORY) and B-tree search (BTREE). The database type (IPv4 or IPv6) and query type (MEMORY, BTREE) are determined at runtime.
 
@@ -27,6 +28,8 @@ npm install czdb
 ```
 
 ## Usage
+
+### Note: czdb has been changed to an ESM package, so please set `"type": "module"` in the project's `package.json` when `import` it in the js file. For details, see [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
 
 ```typescript
 // Import DbSearcher
@@ -81,3 +84,8 @@ searcher.close();
 ```
 
 This will release all used resources and close access to the database file.
+
+[npm-version-src]: https://img.shields.io/npm/v/czdb?style=flat-square
+[npm-version-href]: https://npmjs.com/package/czdb
+[npm-downloads-src]: https://img.shields.io/npm/dm/czdb?style=flat-square
+[npm-downloads-href]: https://npmjs.com/package/czdb

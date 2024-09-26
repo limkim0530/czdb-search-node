@@ -1,6 +1,7 @@
 # czdb-search-node
 
-<img src="https://img.shields.io/npm/v/czdb" alt="czdb"/>
+[![npm version][npm-version-src]][npm-version-href]
+[![npm downloads][npm-downloads-src]][npm-downloads-href]
 
 ### 一个提供纯真离线社区版 IP 地址库`czdb`新格式数据查询的 nodejs 包。它支持两种种类型的搜索算法：内存搜索（MEMORY）和 B 树搜索（BTREE）。数据库类型（IPv4 或 IPv6）和查询类型（MEMORY、BTREE）在运行时确定。
 
@@ -25,6 +26,8 @@ npm install czdb
 ```
 
 ## 使用
+
+### 注意：czdb 已经更改为了 ESM 包，因此在 js 文件中 `import` 引入时请在项目的 `package.json` 中设置`"type": "module"`，详见 [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
 
 ```typescript
 // 引入DbSearcher
@@ -79,3 +82,8 @@ searcher.close();
 ```
 
 这将释放所有使用的资源，并关闭对数据库文件的访问。
+
+[npm-version-src]: https://img.shields.io/npm/v/czdb?style=flat-square
+[npm-version-href]: https://npmjs.com/package/czdb
+[npm-downloads-src]: https://img.shields.io/npm/dm/czdb?style=flat-square
+[npm-downloads-href]: https://npmjs.com/package/czdb
