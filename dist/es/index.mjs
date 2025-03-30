@@ -350,7 +350,7 @@ class DataBlock {
         for (let i = 0; i < columnNumber; i++) {
             const columnSelected = (columnSelection >> (i + 1) & 1) === 1;
             let value = geoColumnUnpackedData[i];
-            if (!value || !value.trim()) {
+            if (!value.trim()) {
                 value = "null";
             }
             if (columnSelected) {
@@ -365,6 +365,7 @@ class DataBlock {
 class DbSearcher {
     constructor(dbFile, queryType, key) {
         this.dbType = DbType$1.IPV4;
+        this.dbVersion = 0;
         this.ipBytesLength = 0;
         this.totalHeaderBlockSize = 0;
         this.raf = null;
@@ -378,6 +379,7 @@ class DbSearcher {
         this.geoMapData = null;
         this.queryType = queryType;
         const headerBlock = HyperHeaderDecoder.decrypt(dbFile, key);
+        this.dbVersion = headerBlock.getVersion();
         this.raf = new Cz88RandomAccessFile(dbFile, "r", headerBlock.getHeaderSize());
         this.raf.seek(0);
         const superBytes = Buffer.alloc(SUPER_PART_LENGTH);
@@ -481,6 +483,9 @@ class DbSearcher {
             return null;
         }
         return dataBlock.getRegion(this.geoMapData, this.columnSelection);
+    }
+    getVersion() {
+        return this.dbVersion;
     }
     memorySearch(ip) {
         const blockLen = IndexBlock.getIndexBlockLength(this.dbType);
