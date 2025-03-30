@@ -1,3 +1,13 @@
+## [0.4.0](https://github.com/limkim0530/czdb-search-node/compare/0.3.0...0.4.0) (2025-03-30)
+
+### Changed
+
+  - License changed from **MIT** to **Apache 2.0**.
+
+### Features
+
+  - Add a method to retrieve the database version.
+
 ## [0.3.0](https://github.com/limkim0530/czdb-search-node/compare/0.2.0...0.3.0) (2024-09-26)
 
 ### Bug Fixes

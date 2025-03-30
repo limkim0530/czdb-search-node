@@ -5,12 +5,6 @@
 
 ### 一个提供纯真离线社区版 IP 地址库`czdb`新格式数据查询的 nodejs 包。它支持两种种类型的搜索算法：内存搜索（MEMORY）和 B 树搜索（BTREE）。数据库类型（IPv4 或 IPv6）和查询类型（MEMORY、BTREE）在运行时确定。
 
-### [JAVA 版本](https://github.com/tagphi/czdb-search-java)
-
-### [PHP 版本](https://github.com/tagphi/czdb_searcher_php)
-
-### [C 版本](https://github.com/tagphi/czdb-search-c)
-
 ## 支持 IPv4 和 IPv6
 
 czdb-search 支持 IPv4 和 IPv6 地址的查询。在创建 DbSearcher 实例时，你需要提供相应的数据库文件和密钥。
@@ -21,8 +15,22 @@ czdb-search 支持 IPv4 和 IPv6 地址的查询。在创建 DbSearcher 实例�
 
 ### 请使用  **Node.js v8.0.0**  或者更高版本以取得 ES6 支持.
 
+#### npm
+
 ```bash
 npm install czdb
+```
+
+#### yarn
+
+```bash
+yarn add czdb
+```
+
+#### pnpm
+
+```bash
+pnpm add czdb
 ```
 
 ## 使用
@@ -49,6 +57,11 @@ const region = searcher.search(IPV4_IP);
 
 // 返回的字符串格式为 "国家–省份–城市–区域 ISP"。如果搜索失败，它将返回 null。
 console.log(region); // 中国–香港  电讯盈科有限公司
+
+// 获取数据库版本
+const version = searcher.getVersion();
+
+console.log(region); // 20250103
 ```
 
 ## 使用样例
@@ -56,9 +69,7 @@ console.log(region); // 中国–香港  电讯盈科有限公司
 你可以在 example 文件夹下找到一个简单的使用样例，在填入路径与密钥后，运行以下命令以进行测试：
 
 ```bash
-pnpm i
-
-pnpm run test
+npm run test
 ```
 
 ## 查询类型

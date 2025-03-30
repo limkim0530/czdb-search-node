@@ -9,14 +9,16 @@ const IPV4_IP = "14.9.15.0";
 const searcher = new DbSearcher(IPV4_DB_PATH, QueryType.MEMORY, KEY);
 const ipv6Searcher = new DbSearcher(IPV6_DB_PATH, QueryType.MEMORY, KEY);
 
+console.log('🚀 ~ db version:', searcher.getVersion());
+
 console.time('ipv4_perform');
 const region = searcher.search(IPV4_IP);
-console.log('🚀 ~ region:', region);
+console.log('🚀 ~ ipv4 region:', region?.split('\t'));
 console.timeEnd('ipv4_perform');
 searcher.close();
 
 console.time('ipv6_perform');
 const ipv6Region = ipv6Searcher.search(IPV6_IP);
-console.log('🚀 ~ ipv6 region:', ipv6Region);
+console.log('🚀 ~ ipv6 region:', ipv6Region?.split('\t'));
 console.timeEnd('ipv6_perform');
 ipv6Searcher.close();

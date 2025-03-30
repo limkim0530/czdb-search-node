@@ -285,6 +285,7 @@ declare class DataBlock {
 
 declare class DbSearcher {
     private dbType;
+    private dbVersion;
     private ipBytesLength;
     private queryType;
     private totalHeaderBlockSize;
@@ -344,6 +345,7 @@ declare class DbSearcher {
      * @return The region of the found data block if the search is successful, null otherwise.
      */
     search(ip: string): string | null;
+    getVersion(): number;
     /**
      * This method performs a memory search to find a data block in the database based on the provided IP address.
      * It uses a binary search algorithm to search the index blocks and find the data.

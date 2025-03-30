@@ -13,6 +13,9 @@ export default class DbSearcher {
     // Enum representing the type of the database (IPv4 or IPv6)
     private dbType: DbType = DbType.IPV4;
 
+    // DB's version
+    private dbVersion = 0;
+
     // Length of the IP bytes
     private ipBytesLength = 0;
 
@@ -64,6 +67,8 @@ export default class DbSearcher {
     constructor(dbFile: string, queryType: QueryType, key: string) {
         this.queryType = queryType;
         const headerBlock = HyperHeaderDecoder.decrypt(dbFile, key);
+
+        this.dbVersion = headerBlock.getVersion();
 
         // if (typeof dbFile === 'string') {
         this.raf = new Cz88RandomAccessFile(dbFile, "r", headerBlock.getHeaderSize());
@@ -221,6 +226,10 @@ export default class DbSearcher {
             return null;
         }
         return dataBlock.getRegion(this.geoMapData, this.columnSelection);
+    }
+
+    getVersion(): number {
+        return this.dbVersion;
     }
 
     /**

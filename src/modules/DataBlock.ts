@@ -82,12 +82,12 @@ export class DataBlock {
             const columnSelected = (columnSelection >> (i + 1) & 1) === 1;
             let value = geoColumnUnpackedData[i];
 
-            if (!value || !value.trim()) {
+            if (!value.trim()) {
                 value = "null";
             }
 
             if (columnSelected) {
-                str += value as string;
+                str += value;
                 str += "\t";
             }
         }
