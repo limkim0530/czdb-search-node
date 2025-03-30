@@ -1,17 +1,11 @@
 # czdb-search-node
 
-### [中文文档](./README_CN.md)
+### [简体中文](./README_CN.md)
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 
 ### A Node.js package for querying the new format data of the Pure IP offline community version database `czdb`. It supports two types of search algorithms: in-memory search (MEMORY) and B-tree search (BTREE). The database type (IPv4 or IPv6) and query type (MEMORY, BTREE) are determined at runtime.
-
-### [JAVA Version](https://github.com/tagphi/czdb-search-java)
-
-### [PHP Version](https://github.com/tagphi/czdb_searcher_php)
-
-### [C Version](https://github.com/tagphi/czdb-search-c)
 
 ## Supports IPv4 and IPv6
 
@@ -65,6 +59,11 @@ const region = searcher.search(IPV4_IP);
 
 // The returned string format is "Country–Province–City–Region ISP". If the search fails, it will return null.
 console.log(region); // China–Hong Kong  PCCW Limited
+
+// Get the database version
+const version = searcher.getVersion();
+
+console.log(region); // 20250103
 ```
 
 ## Example
@@ -72,9 +71,7 @@ console.log(region); // China–Hong Kong  PCCW Limited
 You can find a simple usage example in the example folder. After filling in the path and key, run the following commands to test:
 
 ```bash
-pnpm i
-
-pnpm run test
+npm run test
 ```
 
 ## Query Types
@@ -89,7 +86,7 @@ You can choose the query type when creating a `DbSearcher` instance.
 DbSearcher searcher = new DbSearcher("YOUR_DB_PATH", QueryType.BTREE, "YOUR_KEY");
 ```
 
-## Closing the Database
+## Close the Database
 
 When the query is finished and no longer needed, you should close the database.
 
