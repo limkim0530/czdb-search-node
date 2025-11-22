@@ -14,6 +14,7 @@ export default [
             format: 'es',
             sourcemap: false
         }],
+        external: ['net', 'crypto', 'fs', 'path', '@msgpack/msgpack'],
         plugins: [
             typescript({
                 compilerOptions: {
@@ -28,6 +29,7 @@ export default [
         output: {
             file: 'dist/index.d.ts'
         },
+        external: [/@msgpack\/msgpack/],
         plugins: [dts()]
     }
 ];

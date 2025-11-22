@@ -19,42 +19,44 @@ export default class HyperHeaderDecoder {
      * @return A HyperHeaderBlock deserialized from the read data.
      * @throws Exception If an error occurs during the decryption process, or if the clientId or expirationDate do not match the expected values.
      */
-    static decrypt(dbFile: string | number, key: string): HyperHeaderBlock {
+    static decrypt(dbFilePath: string, key: string): HyperHeaderBlock {
 
-        // 打开文件
-        const fd = typeof dbFile === 'string' ? openSync(resolve(dbFile), 'r') : dbFile;
+        const fd = openSync(resolve(dbFilePath), 'r');
 
-        const headerBytes = Buffer.alloc(HyperHeaderBlock.HEADER_SIZE);
-        readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
+        try {
+            const headerBytes = Buffer.alloc(HyperHeaderBlock.HEADER_SIZE);
+            readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
 
-        const version = ByteUtil.getIntLong(headerBytes, 0);
-        const clientId = ByteUtil.getIntLong(headerBytes, 4);
-        const encryptedBlockSize = ByteUtil.getIntLong(headerBytes, 8);
+            const version = ByteUtil.getIntLong(headerBytes, 0);
+            const clientId = ByteUtil.getIntLong(headerBytes, 4);
+            const encryptedBlockSize = ByteUtil.getIntLong(headerBytes, 8);
 
-        const encryptedBytes = Buffer.alloc(encryptedBlockSize);
-        readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
-        closeSync(fd);
+            const encryptedBytes = Buffer.alloc(encryptedBlockSize);
+            readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
 
-        const decryptedBlock = DecryptedBlock.decrypt(key, encryptedBytes);
+            const decryptedBlock = DecryptedBlock.decrypt(key, encryptedBytes);
 
-        // Check if the clientId in the DecryptedBlock matches the clientId in the HyperHeaderBlock
-        if (decryptedBlock.getClientId() !== clientId) {
-            throw new Error("Wrong clientId");
+            // Check if the clientId in the DecryptedBlock matches the clientId in the HyperHeaderBlock
+            if (decryptedBlock.getClientId() !== clientId) {
+                throw new Error("Wrong clientId");
+            }
+
+            // Check if the expirationDate in the DecryptedBlock is less than the current date
+            // The date here is in 'yyMMdd' format, e.g. 240711
+            const currentDate = parseInt(new Date().toISOString().slice(2, 10).replace(/-/g, ''), 10);
+            if (decryptedBlock.getExpirationDate() < currentDate) {
+                throw new Error("DB is expired");
+            }
+
+            const hyperHeaderBlock = new HyperHeaderBlock();
+            hyperHeaderBlock.setVersion(version);
+            hyperHeaderBlock.setClientId(clientId);
+            hyperHeaderBlock.setEncryptedBlockSize(encryptedBlockSize);
+            hyperHeaderBlock.setDecryptedBlock(decryptedBlock);
+
+            return hyperHeaderBlock;
+        } finally {
+            closeSync(fd);
         }
-
-        // Check if the expirationDate in the DecryptedBlock is less than the current date
-        // The date here is in 'yyMMdd' format, e.g. 240711
-        const currentDate = parseInt(new Date().toISOString().slice(2, 10).replace(/-/g, ''), 10);
-        if (decryptedBlock.getExpirationDate() < currentDate) {
-            throw new Error("DB is expired");
-        }
-
-        const hyperHeaderBlock = new HyperHeaderBlock();
-        hyperHeaderBlock.setVersion(version);
-        hyperHeaderBlock.setClientId(clientId);
-        hyperHeaderBlock.setEncryptedBlockSize(encryptedBlockSize);
-        hyperHeaderBlock.setDecryptedBlock(decryptedBlock);
-
-        return hyperHeaderBlock;
     }
 }

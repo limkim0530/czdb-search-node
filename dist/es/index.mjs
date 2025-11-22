@@ -196,46 +196,50 @@ class HyperHeaderBlock {
 HyperHeaderBlock.HEADER_SIZE = 12;
 
 class HyperHeaderDecoder {
-    static decrypt(dbFile, key) {
-        const fd = typeof dbFile === 'string' ? openSync(resolve(dbFile), 'r') : dbFile;
-        const headerBytes = Buffer.alloc(HyperHeaderBlock.HEADER_SIZE);
-        readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
-        const version = ByteUtil.getIntLong(headerBytes, 0);
-        const clientId = ByteUtil.getIntLong(headerBytes, 4);
-        const encryptedBlockSize = ByteUtil.getIntLong(headerBytes, 8);
-        const encryptedBytes = Buffer.alloc(encryptedBlockSize);
-        readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
-        closeSync(fd);
-        const decryptedBlock = DecryptedBlock.decrypt(key, encryptedBytes);
-        if (decryptedBlock.getClientId() !== clientId) {
-            throw new Error("Wrong clientId");
+    static decrypt(dbFilePath, key) {
+        const fd = openSync(resolve(dbFilePath), 'r');
+        try {
+            const headerBytes = Buffer.alloc(HyperHeaderBlock.HEADER_SIZE);
+            readSync(fd, headerBytes, 0, HyperHeaderBlock.HEADER_SIZE, 0);
+            const version = ByteUtil.getIntLong(headerBytes, 0);
+            const clientId = ByteUtil.getIntLong(headerBytes, 4);
+            const encryptedBlockSize = ByteUtil.getIntLong(headerBytes, 8);
+            const encryptedBytes = Buffer.alloc(encryptedBlockSize);
+            readSync(fd, encryptedBytes, 0, encryptedBlockSize, HyperHeaderBlock.HEADER_SIZE);
+            const decryptedBlock = DecryptedBlock.decrypt(key, encryptedBytes);
+            if (decryptedBlock.getClientId() !== clientId) {
+                throw new Error("Wrong clientId");
+            }
+            const currentDate = parseInt(new Date().toISOString().slice(2, 10).replace(/-/g, ''), 10);
+            if (decryptedBlock.getExpirationDate() < currentDate) {
+                throw new Error("DB is expired");
+            }
+            const hyperHeaderBlock = new HyperHeaderBlock();
+            hyperHeaderBlock.setVersion(version);
+            hyperHeaderBlock.setClientId(clientId);
+            hyperHeaderBlock.setEncryptedBlockSize(encryptedBlockSize);
+            hyperHeaderBlock.setDecryptedBlock(decryptedBlock);
+            return hyperHeaderBlock;
         }
-        const currentDate = parseInt(new Date().toISOString().slice(2, 10).replace(/-/g, ''), 10);
-        if (decryptedBlock.getExpirationDate() < currentDate) {
-            throw new Error("DB is expired");
+        finally {
+            closeSync(fd);
         }
-        const hyperHeaderBlock = new HyperHeaderBlock();
-        hyperHeaderBlock.setVersion(version);
-        hyperHeaderBlock.setClientId(clientId);
-        hyperHeaderBlock.setEncryptedBlockSize(encryptedBlockSize);
-        hyperHeaderBlock.setDecryptedBlock(decryptedBlock);
-        return hyperHeaderBlock;
     }
 }
 
-var DbType;
+var DbType$1;
 (function (DbType) {
     DbType["IPV4"] = "IPV4";
     DbType["IPV6"] = "IPV6";
-})(DbType || (DbType = {}));
-var DbType$1 = DbType;
+})(DbType$1 || (DbType$1 = {}));
+var DbType = DbType$1;
 
-var QueryType;
+var QueryType$1;
 (function (QueryType) {
     QueryType["MEMORY"] = "MEMORY";
     QueryType["BTREE"] = "BTREE";
-})(QueryType || (QueryType = {}));
-var QueryType$1 = QueryType;
+})(QueryType$1 || (QueryType$1 = {}));
+var QueryType = QueryType$1;
 
 const FILE_SIZE_PTR = 1;
 const FIRST_INDEX_PTR = 5;
@@ -280,10 +284,10 @@ class IndexBlock {
         return this;
     }
     static getIndexBlockLength(dbType) {
-        return dbType === DbType$1.IPV4 ? 13 : 37;
+        return dbType === DbType.IPV4 ? 13 : 37;
     }
     getBytes() {
-        const ipBytesLength = this.dbType === DbType$1.IPV4 ? 4 : 16;
+        const ipBytesLength = this.dbType === DbType.IPV4 ? 4 : 16;
         const b = Buffer.alloc(IndexBlock.getIndexBlockLength(this.dbType));
         b.set(this.startIp.slice(0, ipBytesLength), 0);
         b.set(this.endIp.slice(0, ipBytesLength), ipBytesLength);
@@ -363,8 +367,8 @@ class DataBlock {
 }
 
 class DbSearcher {
-    constructor(dbFile, queryType, key) {
-        this.dbType = DbType$1.IPV4;
+    constructor(dbFilePath, queryType, key) {
+        this.dbType = DbType.IPV4;
         this.dbVersion = 0;
         this.ipBytesLength = 0;
         this.totalHeaderBlockSize = 0;
@@ -378,20 +382,28 @@ class DbSearcher {
         this.columnSelection = 0;
         this.geoMapData = null;
         this.queryType = queryType;
-        const headerBlock = HyperHeaderDecoder.decrypt(dbFile, key);
+        const headerBlock = HyperHeaderDecoder.decrypt(dbFilePath, key);
         this.dbVersion = headerBlock.getVersion();
-        this.raf = new Cz88RandomAccessFile(dbFile, "r", headerBlock.getHeaderSize());
-        this.raf.seek(0);
-        const superBytes = Buffer.alloc(SUPER_PART_LENGTH);
-        this.raf.readFully(superBytes);
-        this.dbType = (superBytes[0] & 1) === 0 ? DbType$1.IPV4 : DbType$1.IPV6;
-        this.ipBytesLength = this.dbType === DbType$1.IPV4 ? 4 : 16;
-        this.loadGeoSetting(this.raf, key);
-        if (queryType === QueryType$1.MEMORY) {
-            this.initializeForMemorySearch();
+        this.raf = new Cz88RandomAccessFile(dbFilePath, "r", headerBlock.getHeaderSize());
+        try {
+            this.raf.seek(0);
+            const superBytes = Buffer.alloc(SUPER_PART_LENGTH);
+            this.raf.readFully(superBytes);
+            this.dbType = (superBytes[0] & 1) === 0 ? DbType.IPV4 : DbType.IPV6;
+            this.ipBytesLength = this.dbType === DbType.IPV4 ? 4 : 16;
+            this.loadGeoSetting(this.raf, key);
+            if (queryType === QueryType.MEMORY) {
+                this.initializeForMemorySearch();
+            }
+            else if (queryType === QueryType.BTREE) {
+                this.initBtreeModeParam(this.raf);
+            }
         }
-        else if (queryType === QueryType$1.BTREE) {
-            this.initBtreeModeParam(this.raf);
+        catch (error) {
+            if (this.raf) {
+                this.raf.close();
+            }
+            throw error;
         }
     }
     loadGeoSetting(raf, key) {
@@ -472,10 +484,10 @@ class DbSearcher {
         const ipBytes = this.getIpBytes(ip);
         let dataBlock = null;
         switch (this.queryType) {
-            case QueryType$1.MEMORY:
+            case QueryType.MEMORY:
                 dataBlock = this.memorySearch(ipBytes);
                 break;
-            case QueryType$1.BTREE:
+            case QueryType.BTREE:
                 dataBlock = this.bTreeSearch(ipBytes);
                 break;
         }
@@ -501,6 +513,9 @@ class DbSearcher {
         while (l <= h && this.dbBinStr) {
             const m = (l + h) >> 1;
             const p = sptr + m * blockLen;
+            if (p + this.ipBytesLength > eptr && m == 1) {
+                break;
+            }
             sip.set(this.dbBinStr.subarray(p, p + this.ipBytesLength), 0);
             eip.set(this.dbBinStr.subarray(p + this.ipBytesLength, p + this.ipBytesLength + this.ipBytesLength), 0);
             const cmpStart = this.compareBytes(ip, sip, this.ipBytesLength);
@@ -579,6 +594,9 @@ class DbSearcher {
         while (l <= h) {
             const m = (l + h) >> 1;
             const p = m * blen;
+            if (p >= blockLen && m == 1) {
+                break;
+            }
             sip.set(iBuffer.subarray(p, p + this.ipBytesLength), 0);
             eip.set(iBuffer.subarray(p + this.ipBytesLength, p + this.ipBytesLength + this.ipBytesLength), 0);
             const cmpStart = this.compareBytes(ip, sip, this.ipBytesLength);
@@ -626,16 +644,18 @@ class DbSearcher {
             return Buffer.from(ip.split('.').map(octet => parseInt(octet)));
         }
         else {
-            return Buffer.from(ip.split(':').reduce((acc, part) => {
-                if (part === '') {
-                    const array = new Array(8 - ip.split(':').filter(Boolean).length).fill('0000');
-                    acc.push(...array);
-                }
-                else {
-                    acc.push(part.padStart(4, '0'));
-                }
-                return acc;
-            }, []).join(''), 'hex');
+            const doubleColonIndex = ip.indexOf('::');
+            if (doubleColonIndex !== -1) {
+                const leftParts = ip.substring(0, doubleColonIndex).split(':').filter(Boolean);
+                const rightParts = ip.substring(doubleColonIndex + 2).split(':').filter(Boolean);
+                const missingPartsLength = 8 - leftParts.length - rightParts.length;
+                const missingParts = Array.from({ length: missingPartsLength }, () => '0000');
+                const allParts = [...leftParts, ...missingParts, ...rightParts];
+                return Buffer.from(allParts.map(p => p.padStart(4, '0')).join(''), 'hex');
+            }
+            else {
+                return Buffer.from(ip.split(':').map(p => p.padStart(4, '0')).join(''), 'hex');
+            }
         }
     }
     compareBytes(bytes1, bytes2, length) {
@@ -674,4 +694,4 @@ class DbSearcher {
     }
 }
 
-export { Cz88RandomAccessFile, DataBlock, DbType$1 as DbType, Decryptor, HyperHeaderDecoder, IndexBlock, QueryType$1 as QueryType, DbSearcher as default };
+export { Cz88RandomAccessFile, DataBlock, DbType, Decryptor, HyperHeaderDecoder, IndexBlock, QueryType, DbSearcher as default };
