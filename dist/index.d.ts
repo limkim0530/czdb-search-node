@@ -165,7 +165,7 @@ declare class HyperHeaderDecoder {
      * @return A HyperHeaderBlock deserialized from the read data.
      * @throws Exception If an error occurs during the decryption process, or if the clientId or expirationDate do not match the expected values.
      */
-    static decrypt(dbFile: string | number, key: string): HyperHeaderBlock;
+    static decrypt(dbFilePath: string, key: string): HyperHeaderBlock;
 }
 
 /**
@@ -320,10 +320,10 @@ declare class DbSearcher {
      * Depending on the query type, it calls the appropriate initialization method.
      *
      * @param dbFilePath The path to the database file.
-     * @param queryType The type of the query (MEMORY, BINARY, BTREE).
+     * @param queryType The type of the query (MEMORY, BTREE).
      * @param key The key used for decrypting the header block of the database file.
      */
-    constructor(dbFile: string, queryType: QueryType, key: string);
+    constructor(dbFilePath: string, queryType: QueryType, key: string);
     private loadGeoSetting;
     /**
      * Initializes the DbSearcher instance for memory search.
@@ -364,12 +364,6 @@ declare class DbSearcher {
      * @throws IOException
      */
     private bTreeSearch;
-    /**
-     * get by index ptr
-     *
-     * @param ptr
-     * @throws IOException
-     */
     /**
      * get db type
      *
