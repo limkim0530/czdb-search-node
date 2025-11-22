@@ -3,7 +3,7 @@
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 
-### 一个提供纯真离线社区版 IP 地址库`czdb`新格式数据查询的 nodejs 包。它支持两种种类型的搜索算法：内存搜索（MEMORY）和 B 树搜索（BTREE）。数据库类型（IPv4 或 IPv6）和查询类型（MEMORY、BTREE）在运行时确定。
+### 一个提供纯真离线社区版 IP 地址库`czdb`新格式数据查询的 nodejs 包。它支持两种类型的搜索算法：内存搜索（MEMORY）和 B 树搜索（BTREE）。数据库类型（IPv4 或 IPv6）和查询类型（MEMORY、BTREE）在运行时确定。
 
 ## 支持 IPv4 和 IPv6
 
@@ -35,7 +35,7 @@ pnpm add czdb
 
 ## 使用
 
-### 注意：czdb 已经更改为了 ESM 包，因此在 js 文件中 `import` 引入时请在项目的 `package.json` 中设置`"type": "module"`，详见 [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
+### 注意：czdb 已经更改为了 ESM 包，因此在使用 `import` 引入时请在项目的 `package.json` 中设置`"type": "module"`，详见 [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
 
 ```typescript
 // 引入DbSearcher
@@ -55,13 +55,13 @@ const searcher = new DbSearcher(IPV4_DB_PATH, QueryType.BTREE, KEY);
 // 使用 search 方法来根据提供的 IP 地址在数据库中搜索数据
 const region = searcher.search(IPV4_IP);
 
-// 返回的字符串格式为 "国家–省份–城市–区域 ISP"。如果搜索失败，它将返回 null。
+// 返回的字符串格式为 "国家–省份–城市–区域 ISP" (区域与ISP之间使用"\t"分割)。如果搜索失败，它将返回 null。
 console.log(region); // 中国–香港  电讯盈科有限公司
 
 // 获取数据库版本
 const version = searcher.getVersion();
 
-console.log(region); // 20250103
+console.log(version); // 20250103
 ```
 
 ## 使用样例
@@ -74,14 +74,14 @@ npm run test
 
 ## 查询类型
 
-DbSearcher 支持 2 种查询类型：`MEMORY` 和` BTREE`。
+DbSearcher 支持 2 种查询类型：`MEMORY` 和 `BTREE`。
 
 `MEMORY`：此模式是线程安全的，将数据存储在内存中。
 `BTREE`：此模式使用 `B-tree` 数据结构进行查询。
 你可以在创建 `DbSearcher` 实例时选择查询类型。
 
 ```typescript
-DbSearcher searcher = new DbSearcher("YOUR_DB_PATH", QueryType.BTREE, "YOUR_KEY");
+const searcher = new DbSearcher("YOUR_DB_PATH", QueryType.BTREE, "YOUR_KEY");
 ```
 
 ## 关闭数据库

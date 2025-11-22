@@ -37,7 +37,7 @@ pnpm add czdb
 
 ## Usage
 
-### Note: czdb has been changed to an ESM package, so please set `"type": "module"` in the project's `package.json` when `import` it in the js file. For details, see [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
+### Note: czdb has been changed to an ESM package, so please set `"type": "module"` in your project's `package.json` when importing with `import`. For details, see [Pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
 
 ```typescript
 // Import DbSearcher
@@ -57,13 +57,13 @@ const searcher = new DbSearcher(IPV4_DB_PATH, QueryType.BTREE, KEY);
 // Use the search method to search the database based on the provided IP address
 const region = searcher.search(IPV4_IP);
 
-// The returned string format is "Country–Province–City–Region ISP". If the search fails, it will return null.
-console.log(region); // China–Hong Kong  PCCW Limited
+// The returned string format is "Country–Province–City–Region ISP" (Region and ISP are separated by "\t"). If the search fails, it will return null.
+console.log(region); // 中国–香港  电讯盈科有限公司
 
 // Get the database version
 const version = searcher.getVersion();
 
-console.log(region); // 20250103
+console.log(version); // 20250103
 ```
 
 ## Example
@@ -83,7 +83,7 @@ DbSearcher supports 2 query types: `MEMORY` and `BTREE`.
 You can choose the query type when creating a `DbSearcher` instance.
 
 ```typescript
-DbSearcher searcher = new DbSearcher("YOUR_DB_PATH", QueryType.BTREE, "YOUR_KEY");
+const searcher = new DbSearcher("YOUR_DB_PATH", QueryType.BTREE, "YOUR_KEY");
 ```
 
 ## Close the Database
