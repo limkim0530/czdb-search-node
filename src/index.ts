@@ -61,33 +61,41 @@ export default class DbSearcher {
      * Depending on the query type, it calls the appropriate initialization method.
      *
      * @param dbFilePath The path to the database file.
-     * @param queryType The type of the query (MEMORY, BINARY, BTREE).
+     * @param queryType The type of the query (MEMORY, BTREE).
      * @param key The key used for decrypting the header block of the database file.
      */
-    constructor(dbFile: string, queryType: QueryType, key: string) {
+    constructor(dbFilePath: string, queryType: QueryType, key: string) {
         this.queryType = queryType;
-        const headerBlock = HyperHeaderDecoder.decrypt(dbFile, key);
+        const headerBlock = HyperHeaderDecoder.decrypt(dbFilePath, key);
 
         this.dbVersion = headerBlock.getVersion();
 
-        // if (typeof dbFile === 'string') {
-        this.raf = new Cz88RandomAccessFile(dbFile, "r", headerBlock.getHeaderSize());
+        this.raf = new Cz88RandomAccessFile(dbFilePath, "r", headerBlock.getHeaderSize());
 
-        // set db type
-        this.raf.seek(0);
-        const superBytes = Buffer.alloc(SUPER_PART_LENGTH);
-        this.raf.readFully(superBytes);
-        this.dbType = (superBytes[0] & 1) === 0 ? DbType.IPV4 : DbType.IPV6;
-        this.ipBytesLength = this.dbType === DbType.IPV4 ? 4 : 16;
+        try {
+            // set db type
+            this.raf.seek(0);
+            const superBytes = Buffer.alloc(SUPER_PART_LENGTH);
+            this.raf.readFully(superBytes);
+            this.dbType = (superBytes[0] & 1) === 0 ? DbType.IPV4 : DbType.IPV6;
+            this.ipBytesLength = this.dbType === DbType.IPV4 ? 4 : 16;
 
-        // load geo setting
-        this.loadGeoSetting(this.raf, key);
+            // load geo setting
+            this.loadGeoSetting(this.raf, key);
 
-        if (queryType === QueryType.MEMORY) {
-            this.initializeForMemorySearch();
-        } else if (queryType === QueryType.BTREE) {
-            this.initBtreeModeParam(this.raf);
+            if (queryType === QueryType.MEMORY) {
+                this.initializeForMemorySearch();
+            } else if (queryType === QueryType.BTREE) {
+                this.initBtreeModeParam(this.raf);
+            }
+        } catch (error) {
+            if (this.raf) {
+                this.raf.close();
+            }
+            throw error;
         }
+
+
     }
 
     private loadGeoSetting(raf: Cz88RandomAccessFile, key: string): void {
@@ -268,6 +276,12 @@ export default class DbSearcher {
         while (l <= h && this.dbBinStr) {
             const m = (l + h) >> 1;
             const p = sptr + m * blockLen;
+
+            // The last page has been searched and nothing was found, exit directly.
+            if (p + this.ipBytesLength > eptr && m == 1) {
+                break;
+            }
+
             sip.set(this.dbBinStr.subarray(p, p + this.ipBytesLength), 0);
             eip.set(this.dbBinStr.subarray(p + this.ipBytesLength, p + this.ipBytesLength + this.ipBytesLength), 0);
 
@@ -375,6 +389,14 @@ export default class DbSearcher {
         while (l <= h) {
             const m = (l + h) >> 1;
             const p = m * blen;
+
+            // 如果 p 的指针已经超过 blockLen 了，说明已经搜索到最后一页并且没找到，直接退出
+            // m == 1说明是在header中搜索时没有直接找到，返回了最后一个段的情况，这个段是不满的，所以要这样处理下
+            // TODO: 也可能有更好的办法
+            if (p >= blockLen && m == 1) {
+                break;
+            }
+
             sip.set(iBuffer.subarray(p, p + this.ipBytesLength), 0);
             eip.set(iBuffer.subarray(p + this.ipBytesLength, p + this.ipBytesLength + this.ipBytesLength), 0);
 
@@ -407,28 +429,6 @@ export default class DbSearcher {
         this.raf!.readFully(region);
         return new DataBlock(region, dataPtr);
     }
-
-    /**
-     * get by index ptr
-     *
-     * @param ptr
-     * @throws IOException
-     */
-    // private getByIndexPtr(ptr: number): DataBlock {
-    //     this.raf.seek(ptr);
-    //     const buffer = Buffer.alloc(36);
-    //     this.raf.readFully(buffer, 0, buffer.length);
-    //     const extra = ByteUtil.getIntLong(buffer, 32);
-
-    //     const dataLen = (extra >> 24) & 0xFF;
-    //     const dataPtr = (extra & 0x00FFFFFF);
-
-    //     this.raf.seek(dataPtr);
-    //     const region = Buffer.alloc(dataLen);
-    //     this.raf.readFully(region, 0, region.length);
-
-    //     return new DataBlock(region, dataPtr);
-    // }
 
     /**
      * get db type
@@ -478,16 +478,21 @@ export default class DbSearcher {
             return Buffer.from(ip.split('.').map(octet => parseInt(octet)));
         } else {
             // handling IPv6
-            return Buffer.from(ip.split(':').reduce((acc, part) => {
-                if (part === '') {
-                    // handling double colon case
-                    const array = new Array(8 - ip.split(':').filter(Boolean).length).fill('0000') as string[];
-                    acc.push(...array);
-                } else {
-                    acc.push(part.padStart(4, '0'));
-                }
-                return acc;
-            }, [] as string[]).join(''), 'hex');
+            const doubleColonIndex = ip.indexOf('::');
+
+            if (doubleColonIndex !== -1) {
+                const leftParts = ip.substring(0, doubleColonIndex).split(':').filter(Boolean);
+                const rightParts = ip.substring(doubleColonIndex + 2).split(':').filter(Boolean);
+                const missingPartsLength = 8 - leftParts.length - rightParts.length;
+
+                const missingParts = Array.from({ length: missingPartsLength }, () => '0000');
+
+                const allParts = [...leftParts, ...missingParts, ...rightParts];
+
+                return Buffer.from(allParts.map(p => p.padStart(4, '0')).join(''), 'hex');
+            } else {
+                return Buffer.from(ip.split(':').map(p => p.padStart(4, '0')).join(''), 'hex');
+            }
         }
     }
 
