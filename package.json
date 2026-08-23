@@ -1,6 +1,6 @@
 {
   "name": "czdb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "High-performance IP geolocation library for CZDB (纯真IP库) with support for IPv4/IPv6 and dual search modes (Memory/B-tree)",
   "main": "dist/index.cjs",
   "type": "module",

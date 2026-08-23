@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/limkim0530/czdb-search-node/compare/1.0.0...1.0.1) (2026-08-23)
+
+### 🐛 Bug Fixes & Improvements
+
+- **TypeScript Definitions**: Added `"types": ["node"]` to `tsconfig.json` to resolve `Buffer` and Node.js built-in module type checking errors in ESM mode.
+- **Dependencies**: Upgraded project dependencies (`typescript`, `eslint`, `@msgpack/msgpack`, `rollup`, `tsx`, etc.) to their latest versions.
+
+---
+
 ## [1.0.0](https://github.com/limkim0530/czdb-search-node/compare/0.4.0...1.0.0) (2025-11-22)
 
 ### 🎉 Major Release - Production Ready
